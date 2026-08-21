@@ -1,6 +1,7 @@
 package com.h3lium.cbt;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
+import android.webkit.JsResult;
 import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -40,8 +42,33 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
 
-        // Multi-window / popup support
+        // Custom dialogs to hide website URL
         myWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("H3LIUM CBT")
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok, (dialog, which) -> result.confirm())
+                        .setNegativeButton(android.R.string.cancel, (dialog, which) -> result.cancel())
+                        .setCancelable(false)
+                        .create()
+                        .show();
+                return true;
+            }
+
+            @Override
+            public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("H3LIUM CBT")
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok, (dialog, which) -> result.confirm())
+                        .setCancelable(false)
+                        .create()
+                        .show();
+                return true;
+            }
+
             @Override
             public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
                 WebView newWebView = new WebView(MainActivity.this);
@@ -83,7 +110,6 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // Redirect JS print to native PDF generator
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
             }
         });
