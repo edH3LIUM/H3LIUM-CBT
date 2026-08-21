@@ -2,11 +2,15 @@ package com.h3lium.cbt;
 
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Message;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.URLUtil;
@@ -28,17 +32,15 @@ public class MainActivity extends Activity {
         myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         
-        // Essential Web Settings
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
-        
-        // Support window.open for START button clicks
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
 
+        // Multi-window / popup support
         myWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
@@ -77,9 +79,30 @@ public class MainActivity extends Activity {
                 }
                 return false;
             }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // Redirect JS print to native PDF generator
+                view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
+            }
         });
 
-        // Handle PDF & File Downloads (SAVE ANALYSIS click fix)
+        // Native Print / PDF dialog bridge
+        myWebView.addJavascriptInterface(new Object() {
+            @android.webkit.JavascriptInterface
+            public void print() {
+                runOnUiThread(() -> {
+                    PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+                    PrintDocumentAdapter printAdapter = myWebView.createPrintDocumentAdapter("Analysis_Report");
+                    if (printManager != null) {
+                        printManager.print("Analysis_Report", printAdapter, new PrintAttributes.Builder().build());
+                    }
+                });
+            }
+        }, "AndroidPrint");
+
+        // General file downloads
         myWebView.setDownloadListener(new DownloadListener() {
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long contentLength) {
@@ -99,9 +122,9 @@ public class MainActivity extends Activity {
                     DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                     dm.enqueue(request);
                     
-                    Toast.makeText(getApplicationContext(), "Downloading Analysis PDF...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Downloading Analysis...", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
-                    Toast.makeText(getApplicationContext(), "Download failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Download failed", Toast.LENGTH_SHORT).show();
                 }
             }
         });
