@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
 
         myWebView = findViewById(R.id.webview);
 
-        // Status bar aur Navigation bar ke safe area ke mutabiq padding auto-adjust karein
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.webview), (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
@@ -93,12 +92,15 @@ public class MainActivity extends AppCompatActivity {
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("tg:") || url.contains("t.me/")) {
+                // Telegram & WhatsApp redirection logic
+                if (url.startsWith("tg:") || url.contains("t.me/") || 
+                    url.startsWith("whatsapp:") || url.contains("wa.me/") || url.contains("api.whatsapp.com")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         startActivity(intent);
                         return true;
                     } catch (Exception e) {
+                        e.printStackTrace();
                         return false;
                     }
                 }
