@@ -18,19 +18,10 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-
-    - name: Create Gradle Project Files
-      run: |
-        printf 'rootProject.name = "H3LIUM CBT"\ninclude ":app"\n' > settings.gradle
-
-        printf 'buildscript {\n    repositories {\n        google()\n        mavenCentral()\n    }\n    dependencies {\n        classpath "com.android.tools.build:gradle:8.1.1"\n    }\n}\nallprojects {\n    repositories {\n        google()\n        mavenCentral()\n    }\n}\n' > build.gradle
-
-        printf 'plugins {\n    id "com.android.application"\n}\n\nandroid {\n    namespace "com.h3lium.cbt"\n    compileSdk 33\n\n    defaultConfig {\n        applicationId "com.h3lium.cbt"\n        minSdk 21\n        targetSdk 33\n        versionCode 1\n        versionName "1.0"\n    }\n\n    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }\n}\n\ndependencies {\n    implementation "androidx.appcompat:appcompat:1.6.1"\n}\n' > app/build.gradle
-
-    - name: Build APK
-      run: gradle assembleDebug
+    - name: Build Debug APK
+      uses: android-actions/build-apk@v3
+      with:
+        arguments: --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
