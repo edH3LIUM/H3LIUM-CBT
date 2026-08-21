@@ -1,14 +1,14 @@
 package com.h3lium.cbt;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private WebView myWebView;
 
@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // Telegram & WhatsApp Link Redirection
                 if (url.startsWith("tg:") || url.contains("t.me/") || 
                     url.startsWith("whatsapp:") || url.contains("wa.me/") || url.contains("api.whatsapp.com")) {
                     try {
