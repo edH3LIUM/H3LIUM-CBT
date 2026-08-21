@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
+import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -13,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 public class MainActivity extends AppCompatActivity {
 
     private WebView myWebView;
+    private View customView;
+    private WebChromeClient.CustomViewCallback customViewCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,19 +26,40 @@ public class MainActivity extends AppCompatActivity {
         myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         
-        // PWA Specific Settings
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
-        
-        // Window opening & PWA routing handling
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
 
-        // WebChromeClient with window.open support
         myWebView.setWebChromeClient(new WebChromeClient() {
+            // Native Fullscreen API support
+            @Override
+            public void onShowCustomView(View view, CustomViewCallback callback) {
+                if (customView != null) {
+                    onHideCustomView();
+                    return;
+                }
+                customView = view;
+                customViewCallback = callback;
+                ViewGroup decor = (ViewGroup) getWindow().getDecorView();
+                decor.addView(customView, new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                myWebView.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onHideCustomView() {
+                if (customView == null) return;
+                ViewGroup decor = (ViewGroup) getWindow().getDecorView();
+                decor.removeView(customView);
+                customView = null;
+                myWebView.setVisibility(View.VISIBLE);
+                if (customViewCallback != null) customViewCallback.onCustomViewHidden();
+            }
+
             @Override
             public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
                 WebView newWebView = new WebView(MainActivity.this);
@@ -59,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // External App / Telegram Links
                 if (url.startsWith("tg:") || url.contains("t.me/")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -78,7 +102,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (myWebView.canGoBack()) {
+        if (customView != null) {
+            myWebView.getWebChromeClient().onHideCustomView();
+        } else if (myWebView.canGoBack()) {
             myWebView.goBack();
         } else {
             super.onBackPressed();
