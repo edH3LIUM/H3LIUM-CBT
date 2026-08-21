@@ -18,10 +18,60 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build Debug APK
-      uses: android-actions/build-apk@v3
-      with:
-        arguments: --no-daemon
+    - name: Build APK
+      run: |
+        cat << 'EOF' > settings.gradle
+        rootProject.name = "H3LIUM CBT"
+        include ':app'
+        EOF
+
+        cat << 'EOF' > build.gradle
+        buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.1.1'
+            }
+        }
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        EOF
+
+        cat << 'EOF' > app/build.gradle
+        plugins {
+            id 'com.android.application'
+        }
+
+        android {
+            namespace 'com.h3lium.cbt'
+            compileSdk 33
+
+            defaultConfig {
+                applicationId "com.h3lium.cbt"
+                minSdk 21
+                targetSdk 33
+                versionCode 1
+                versionName "1.0"
+            }
+
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+
+        dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+        }
+        EOF
+
+        gradle assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
