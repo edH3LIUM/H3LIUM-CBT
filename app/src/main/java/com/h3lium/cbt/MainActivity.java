@@ -20,6 +20,10 @@ public class MainActivity extends AppCompatActivity {
         myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         
+        // Always load latest changes from Netlify without caching old files
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+
+        // Web App configurations
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
@@ -30,18 +34,17 @@ public class MainActivity extends AppCompatActivity {
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // Telegram external links ko handle karein
+                // Telegram external links
                 if (url.startsWith("tg:") || url.contains("t.me/")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         startActivity(intent);
-                        return true; // WebView ko batayein ki humne handle kar liya
+                        return true;
                     } catch (Exception e) {
                         return false;
                     }
                 }
-                // Baki sabhi links (internal navigation) ke liye 'return false' karein
-                // Isse WebView khud naturally load karega (SPA/React ke liye best hai)
+                // Allow in-app WebView navigation for Netlify web app
                 return false;
             }
         });
