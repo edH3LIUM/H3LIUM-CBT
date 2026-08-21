@@ -3,6 +3,7 @@ package com.h3lium.cbt;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -21,25 +22,44 @@ public class MainActivity extends AppCompatActivity {
         myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         
-        // Cache aur JS settings
-        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        // PWA Specific Settings
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
         
-        // Popup aur JS interaction ke liye zaruri
+        // Window opening & PWA routing handling
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
 
-        // ChromeClient add karna "Start" button click functionality ke liye zaruri hai
-        myWebView.setWebChromeClient(new WebChromeClient());
+        // WebChromeClient with window.open support
+        myWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+                WebView newWebView = new WebView(MainActivity.this);
+                newWebView.getSettings().setJavaScriptEnabled(true);
+                newWebView.getSettings().setDomStorageEnabled(true);
+                
+                WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                transport.setWebView(newWebView);
+                resultMsg.sendToTarget();
+
+                newWebView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                        myWebView.loadUrl(url);
+                        return true;
+                    }
+                });
+                return true;
+            }
+        });
 
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // Telegram external links handle
+                // External App / Telegram Links
                 if (url.startsWith("tg:") || url.contains("t.me/")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
