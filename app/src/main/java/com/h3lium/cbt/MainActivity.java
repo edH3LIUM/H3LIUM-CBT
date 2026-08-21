@@ -11,6 +11,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +27,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         myWebView = findViewById(R.id.webview);
+
+        // Status bar aur Navigation bar ke safe area ke mutabiq padding auto-adjust karein
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.webview), (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+
         WebSettings webSettings = myWebView.getSettings();
         
         webSettings.setJavaScriptEnabled(true);
@@ -44,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
                 customView = view;
                 customViewCallback = callback;
                 
-                // NO fullscreen flags here. Just show the view.
                 ViewGroup decorView = (ViewGroup) getWindow().getDecorView();
                 decorView.addView(customView, new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
