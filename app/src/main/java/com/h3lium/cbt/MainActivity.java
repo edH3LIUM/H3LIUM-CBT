@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // Telegram ya WhatsApp links ko handle karna
+                // Telegram & WhatsApp Link Redirection
                 if (url.startsWith("tg:") || url.contains("t.me/") || 
                     url.startsWith("whatsapp:") || url.contains("wa.me/") || url.contains("api.whatsapp.com")) {
                     try {
