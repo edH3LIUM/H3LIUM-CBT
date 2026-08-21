@@ -3,6 +3,7 @@ package com.h3lium.cbt;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -20,21 +21,25 @@ public class MainActivity extends AppCompatActivity {
         myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         
-        // Always load latest changes from Netlify without caching old files
+        // Cache aur JS settings
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-
-        // Web App configurations
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
+        
+        // Popup aur JS interaction ke liye zaruri
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+        webSettings.setSupportMultipleWindows(true);
+
+        // ChromeClient add karna "Start" button click functionality ke liye zaruri hai
+        myWebView.setWebChromeClient(new WebChromeClient());
 
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // Telegram external links
+                // Telegram external links handle
                 if (url.startsWith("tg:") || url.contains("t.me/")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -44,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
                         return false;
                     }
                 }
-                // Allow in-app WebView navigation for Netlify web app
                 return false;
             }
         });
