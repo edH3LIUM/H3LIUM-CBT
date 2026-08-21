@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setSupportMultipleWindows(true);
 
         myWebView.setWebChromeClient(new WebChromeClient() {
-            // Native Fullscreen API support
             @Override
             public void onShowCustomView(View view, CustomViewCallback callback) {
                 if (customView != null) {
@@ -44,8 +43,10 @@ public class MainActivity extends AppCompatActivity {
                 }
                 customView = view;
                 customViewCallback = callback;
-                ViewGroup decor = (ViewGroup) getWindow().getDecorView();
-                decor.addView(customView, new ViewGroup.LayoutParams(
+                
+                // NO fullscreen flags here. Just show the view.
+                ViewGroup decorView = (ViewGroup) getWindow().getDecorView();
+                decorView.addView(customView, new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 myWebView.setVisibility(View.GONE);
             }
@@ -53,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onHideCustomView() {
                 if (customView == null) return;
-                ViewGroup decor = (ViewGroup) getWindow().getDecorView();
-                decor.removeView(customView);
+                ViewGroup decorView = (ViewGroup) getWindow().getDecorView();
+                decorView.removeView(customView);
                 customView = null;
                 myWebView.setVisibility(View.VISIBLE);
                 if (customViewCallback != null) customViewCallback.onCustomViewHidden();
@@ -65,11 +66,9 @@ public class MainActivity extends AppCompatActivity {
                 WebView newWebView = new WebView(MainActivity.this);
                 newWebView.getSettings().setJavaScriptEnabled(true);
                 newWebView.getSettings().setDomStorageEnabled(true);
-                
                 WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
                 transport.setWebView(newWebView);
                 resultMsg.sendToTarget();
-
                 newWebView.setWebViewClient(new WebViewClient() {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
