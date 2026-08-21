@@ -25,23 +25,24 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setDatabaseEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
+        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // Standard HTTP/HTTPS links app ke WebView me hi khulenge
-                if (url.startsWith("http://") || url.startsWith("https://")) {
-                    return false; 
+                // Telegram external links ko handle karein
+                if (url.startsWith("tg:") || url.contains("t.me/")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(intent);
+                        return true; // WebView ko batayein ki humne handle kar liya
+                    } catch (Exception e) {
+                        return false;
+                    }
                 }
-                
-                // tg:// ya dusre custom schemes ko Telegram/External Apps me redirect karenge
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return true;
+                // Baki sabhi links (internal navigation) ke liye 'return false' karein
+                // Isse WebView khud naturally load karega (SPA/React ke liye best hai)
+                return false;
             }
         });
 
