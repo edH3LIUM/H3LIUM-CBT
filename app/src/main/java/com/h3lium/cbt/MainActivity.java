@@ -1,5 +1,7 @@
 package com.h3lium.cbt;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -18,27 +20,34 @@ public class MainActivity extends AppCompatActivity {
         myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         
-        // Web site features enable
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
 
-        // Internal navigation within the app
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
+                // Standard HTTP/HTTPS links app ke WebView me hi khulenge
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false; 
+                }
+                
+                // tg:// ya dusre custom schemes ko Telegram/External Apps me redirect karenge
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 return true;
             }
         });
 
-        // Load Netlify Web App
         myWebView.loadUrl("https://h3liumcbt.netlify.app/"); 
     }
 
-    // Handle back button for in-app navigation
     @Override
     public void onBackPressed() {
         if (myWebView.canGoBack()) {
