@@ -26,7 +26,7 @@
         android:textColor="#333333"
         android:textSize="15sp"
         android:lineSpacingExtra="4dp"
-        android:paddingBottom="20dp" />
+        android:paddingBottom="24dp" />
 
     <!-- Buttons Layout -->
     <LinearLayout
@@ -38,25 +38,28 @@
         <Button
             android:id="@+id/dialog_button_cancel"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:text="Cancel"
             android:textColor="#800020"
             android:background="@android:color/transparent"
             android:textAllCaps="false"
             android:textStyle="bold"
-            android:layout_marginRight="8dp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:layout_marginRight="12dp"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/dialog_button_ok"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:text="OK"
             android:textColor="@android:color/white"
             android:background="#800020"
             android:textAllCaps="false"
             android:textStyle="bold"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp" />
+            android:minWidth="80dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp" />
     </LinearLayout>
 </LinearLayout>
