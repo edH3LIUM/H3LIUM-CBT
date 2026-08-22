@@ -11,7 +11,7 @@
         android:id="@+id/dialog_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="H3LIUM CBT"
+        android:text="H3LIUM"
         android:textColor="#800020"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -60,4 +60,3 @@
             android:paddingRight="16dp" />
     </LinearLayout>
 </LinearLayout>
-
