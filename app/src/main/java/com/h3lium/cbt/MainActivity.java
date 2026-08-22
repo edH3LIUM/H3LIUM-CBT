@@ -1,7 +1,7 @@
 package com.h3lium.cbt;
 
 import android.app.Activity;
-import android.app.Dialog;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +16,7 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.AlphaAnimation;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.JsResult;
@@ -31,6 +32,7 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
     private WebView myWebView;
+    private String currentLoadedUrl = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +50,7 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
 
-        // Custom Themed Dialogs (Matches website maroon/white theme)
+        // Custom Themed Dialogs
         myWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
@@ -142,9 +144,26 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                // Fade-out effect when loading starts
+                if (!url.equals(currentLoadedUrl)) {
+                    AlphaAnimation fadeOut = new AlphaAnimation(1.0f, 0.4f);
+                    fadeOut.setDuration(150);
+                    view.startAnimation(fadeOut);
+                }
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                currentLoadedUrl = url;
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
+
+                // Smooth Fade-in animation when page loads completely
+                AlphaAnimation fadeIn = new AlphaAnimation(0.4f, 1.0f);
+                fadeIn.setDuration(250);
+                view.startAnimation(fadeIn);
             }
         });
 
