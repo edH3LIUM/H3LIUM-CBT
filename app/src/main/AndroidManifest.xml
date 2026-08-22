@@ -9,7 +9,7 @@
         android:allowBackup="true"
         android:icon="@drawable/logo"
         android:roundIcon="@drawable/logo"
-        android:label="H3LIUM CBT"
+        android:label="H3LIUM"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Light.NoTitleBar">
         
@@ -24,3 +24,4 @@
     </application>
 
 </manifest>
+
