@@ -1,10 +1,12 @@
 package com.h3lium.cbt;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,6 +14,8 @@ import android.os.Message;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
+import android.view.View;
+import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.JsResult;
@@ -20,6 +24,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -42,30 +48,58 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
 
-        // Custom dialogs to hide website URL
+        // Custom Themed Dialogs (Matches website maroon/white theme)
         myWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("H3LIUM CBT")
-                        .setMessage(message)
-                        .setPositiveButton(android.R.string.ok, (dialog, which) -> result.confirm())
-                        .setNegativeButton(android.R.string.cancel, (dialog, which) -> result.cancel())
-                        .setCancelable(false)
-                        .create()
-                        .show();
+                Dialog dialog = new Dialog(MainActivity.this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.dialog_custom);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.setCancelable(false);
+
+                TextView tvMessage = dialog.findViewById(R.id.dialog_message);
+                Button btnOk = dialog.findViewById(R.id.dialog_button_ok);
+                Button btnCancel = dialog.findViewById(R.id.dialog_button_cancel);
+
+                tvMessage.setText(message);
+                btnCancel.setVisibility(View.VISIBLE);
+
+                btnOk.setOnClickListener(v -> {
+                    result.confirm();
+                    dialog.dismiss();
+                });
+
+                btnCancel.setOnClickListener(v -> {
+                    result.cancel();
+                    dialog.dismiss();
+                });
+
+                dialog.show();
                 return true;
             }
 
             @Override
             public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("H3LIUM CBT")
-                        .setMessage(message)
-                        .setPositiveButton(android.R.string.ok, (dialog, which) -> result.confirm())
-                        .setCancelable(false)
-                        .create()
-                        .show();
+                Dialog dialog = new Dialog(MainActivity.this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.dialog_custom);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.setCancelable(false);
+
+                TextView tvMessage = dialog.findViewById(R.id.dialog_message);
+                Button btnOk = dialog.findViewById(R.id.dialog_button_ok);
+                Button btnCancel = dialog.findViewById(R.id.dialog_button_cancel);
+
+                tvMessage.setText(message);
+                btnCancel.setVisibility(View.GONE);
+
+                btnOk.setOnClickListener(v -> {
+                    result.confirm();
+                    dialog.dismiss();
+                });
+
+                dialog.show();
                 return true;
             }
 
