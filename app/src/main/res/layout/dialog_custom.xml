@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="24dp">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="H3LIUM CBT"
+        android:textColor="#800020"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="12dp" />
+
+    <!-- Message -->
+    <TextView
+        android:id="@+id/dialog_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#333333"
+        android:textSize="15sp"
+        android:lineSpacingExtra="4dp"
+        android:paddingBottom="20dp" />
+
+    <!-- Buttons Layout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/dialog_button_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="Cancel"
+            android:textColor="#800020"
+            android:background="@android:color/transparent"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:layout_marginRight="8dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/dialog_button_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="OK"
+            android:textColor="@android:color/white"
+            android:background="#800020"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp" />
+    </LinearLayout>
+</LinearLayout>
+
