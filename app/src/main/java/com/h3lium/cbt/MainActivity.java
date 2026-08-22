@@ -1,7 +1,7 @@
 package com.h3lium.cbt;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -146,7 +146,6 @@ public class MainActivity extends Activity {
             @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                // Fade-out effect when loading starts
                 if (!url.equals(currentLoadedUrl)) {
                     AlphaAnimation fadeOut = new AlphaAnimation(1.0f, 0.4f);
                     fadeOut.setDuration(150);
@@ -160,7 +159,14 @@ public class MainActivity extends Activity {
                 currentLoadedUrl = url;
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
 
-                // Smooth Fade-in animation when page loads completely
+                // Inject CSS for smooth Left-to-Right slide animation on web menus/drawers
+                String slideAnimationCss = 
+                    "var style = document.createElement('style');" +
+                    "style.innerHTML = '@keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } " +
+                    "nav, .drawer, .menu-sidebar, [class*=\"menu\"], [class*=\"drawer\"] { animation: slideInLeft 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important; }';" +
+                    "document.head.appendChild(style);";
+                view.loadUrl("javascript:" + slideAnimationCss);
+
                 AlphaAnimation fadeIn = new AlphaAnimation(0.4f, 1.0f);
                 fadeIn.setDuration(250);
                 view.startAnimation(fadeIn);
