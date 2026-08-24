@@ -214,7 +214,8 @@ public class MainActivity extends Activity {
             }
         });
 
-        myWebView.loadUrl("https://h3liumcbt.netlify.app/"); 
+        // Nayi Website URL
+        myWebView.loadUrl("https://h3lium-cbt.netlify.app/"); 
     }
 
     @Override
