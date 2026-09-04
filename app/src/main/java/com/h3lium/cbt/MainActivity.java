@@ -3,11 +3,14 @@ package com.h3lium.cbt;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DownloadManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Message;
@@ -33,11 +36,14 @@ public class MainActivity extends Activity {
 
     private WebView myWebView;
     private String currentLoadedUrl = "";
+    private static final String CHANNEL_ID = "h3lium_app_notifications";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createNotificationChannel();
 
         myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
@@ -119,6 +125,9 @@ public class MainActivity extends Activity {
                 newWebView.setWebViewClient(new WebViewClient() {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                        if (handleExternalLinks(url)) {
+                            return true;
+                        }
                         myWebView.loadUrl(url);
                         return true;
                     }
@@ -130,15 +139,8 @@ public class MainActivity extends Activity {
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("tg:") || url.contains("t.me/") || 
-                    url.startsWith("whatsapp:") || url.contains("wa.me/") || url.contains("api.whatsapp.com")) {
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        startActivity(intent);
-                        return true;
-                    } catch (Exception e) {
-                        return false;
-                    }
+                if (handleExternalLinks(url)) {
+                    return true;
                 }
                 return false;
             }
@@ -159,7 +161,6 @@ public class MainActivity extends Activity {
                 currentLoadedUrl = url;
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
 
-                // Inject CSS for smooth Left-to-Right slide animation on web menus/drawers
                 String slideAnimationCss = 
                     "var style = document.createElement('style');" +
                     "style.innerHTML = '@keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } " +
@@ -173,7 +174,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Native Print / PDF dialog bridge
+        // Native Print / PDF bridge
         myWebView.addJavascriptInterface(new Object() {
             @android.webkit.JavascriptInterface
             public void print() {
@@ -214,8 +215,51 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Nayi Website URL
         myWebView.loadUrl("https://h3lium-cbt.netlify.app/"); 
+    }
+
+    // External App Redirect Handler (Telegram, WhatsApp Channels/Groups/Chats, Intent URIs)
+    private boolean handleExternalLinks(String url) {
+        if (url == null) return false;
+
+        if (url.startsWith("whatsapp:") || url.contains("wa.me") || 
+            url.contains("whatsapp.com") || url.contains("chat.whatsapp.com") ||
+            url.startsWith("tg:") || url.contains("t.me") || 
+            url.startsWith("intent://")) {
+            
+            try {
+                Intent intent;
+                if (url.startsWith("intent://")) {
+                    intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                } else {
+                    intent = Intent.newIntent(Intent.ACTION_VIEW, Uri.parse(url));
+                }
+
+                if (intent != null) {
+                    startActivity(intent);
+                    return true;
+                }
+            } catch (Exception e) {
+                Toast.makeText(this, "App not installed or link cannot be opened", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "H3LIUM Notifications";
+            String description = "Channel for H3LIUM app notifications";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
     }
 
     @Override
