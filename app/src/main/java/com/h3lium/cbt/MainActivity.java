@@ -248,15 +248,23 @@ public class MainActivity extends Activity {
                     }
 
                     if (path != null && !path.isEmpty()) {
-                        if (path.startsWith("+") || path.startsWith("joinchat/")) {
-                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        if (path.startsWith("+")) {
+                            // Private Invite Link (e.g. t.me/+4uGIcn_EFwAyMTZl -> tg://join?invite=4uGIcn_EFwAyMTZl)
+                            String inviteCode = path.substring(1);
+                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://join?invite=" + inviteCode));
+                        } else if (path.startsWith("joinchat/")) {
+                            // Legacy Private Invite Link
+                            String inviteCode = path.replace("joinchat/", "");
+                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://join?invite=" + inviteCode));
                         } else {
                             String[] parts = path.split("/");
                             if (parts.length >= 2) {
+                                // Channel Post link e.g. PREMIUM_H3/3 -> tg://resolve?domain=PREMIUM_H3&post=3
                                 String domain = parts[0];
                                 String postId = parts[1];
                                 intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=" + domain + "&post=" + postId));
                             } else {
+                                // Public Channel Link e.g. PREMIUM_H3 -> tg://resolve?domain=PREMIUM_H3
                                 intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=" + parts[0]));
                             }
                         }
@@ -277,7 +285,7 @@ public class MainActivity extends Activity {
                     startActivity(fallbackIntent);
                     return true;
                 } catch (Exception ex) {
-                    Toast.makeText(this, "Telegram App not installed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "App not installed", Toast.LENGTH_SHORT).show();
                     return true;
                 }
             }
