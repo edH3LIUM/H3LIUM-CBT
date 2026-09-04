@@ -46,7 +46,6 @@ public class MainActivity extends Activity {
 
         myWebView = findViewById(R.id.webview);
         
-        // Blink aur flickering issue ko rokne ke liye Hardware Acceleration optimization
         myWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         WebSettings webSettings = myWebView.getSettings();
@@ -59,7 +58,6 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
         
-        // Smooth rendering ke liye settings
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
@@ -242,10 +240,29 @@ public class MainActivity extends Activity {
                 if (url.startsWith("intent://")) {
                     intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
                 } else if (url.contains("t.me/") || url.contains("telegram.me/")) {
-                    String tgUri = url.replace("https://t.me/", "tg://resolve?domain=")
-                                      .replace("http://t.me/", "tg://resolve?domain=")
-                                      .replace("https://telegram.me/", "tg://resolve?domain=");
-                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(tgUri));
+                    Uri parsedUri = Uri.parse(url);
+                    String path = parsedUri.getPath();
+                    
+                    if (path != null && path.startsWith("/")) {
+                        path = path.substring(1);
+                    }
+
+                    if (path != null && !path.isEmpty()) {
+                        if (path.startsWith("+") || path.startsWith("joinchat/")) {
+                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        } else {
+                            String[] parts = path.split("/");
+                            if (parts.length >= 2) {
+                                String domain = parts[0];
+                                String postId = parts[1];
+                                intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=" + domain + "&post=" + postId));
+                            } else {
+                                intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=" + parts[0]));
+                            }
+                        }
+                    } else {
+                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    }
                 } else {
                     intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 }
@@ -260,7 +277,7 @@ public class MainActivity extends Activity {
                     startActivity(fallbackIntent);
                     return true;
                 } catch (Exception ex) {
-                    Toast.makeText(this, "App not installed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Telegram App not installed", Toast.LENGTH_SHORT).show();
                     return true;
                 }
             }
