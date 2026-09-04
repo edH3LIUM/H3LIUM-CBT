@@ -25,6 +25,7 @@ import android.webkit.DownloadListener;
 import android.webkit.JsResult;
 import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -56,7 +57,6 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
 
-        // Custom Themed Dialogs
         myWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
@@ -131,6 +131,16 @@ public class MainActivity extends Activity {
                         myWebView.loadUrl(url);
                         return true;
                     }
+
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                        String url = request.getUrl().toString();
+                        if (handleExternalLinks(url)) {
+                            return true;
+                        }
+                        myWebView.loadUrl(url);
+                        return true;
+                    }
                 });
                 return true;
             }
@@ -146,8 +156,21 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                String url = request.getUrl().toString();
+                if (handleExternalLinks(url)) {
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
+                if (handleExternalLinks(url)) {
+                    view.stopLoading();
+                    return;
+                }
                 if (!url.equals(currentLoadedUrl)) {
                     AlphaAnimation fadeOut = new AlphaAnimation(1.0f, 0.4f);
                     fadeOut.setDuration(150);
@@ -218,21 +241,27 @@ public class MainActivity extends Activity {
         myWebView.loadUrl("https://h3lium-cbt.netlify.app/"); 
     }
 
-    // External App Redirect Handler (Telegram, WhatsApp Channels/Groups/Chats, Intent URIs)
+    // Immediate External Redirect without rendering preview in WebView
     private boolean handleExternalLinks(String url) {
         if (url == null) return false;
 
         if (url.startsWith("whatsapp:") || url.contains("wa.me") || 
             url.contains("whatsapp.com") || url.contains("chat.whatsapp.com") ||
-            url.startsWith("tg:") || url.contains("t.me") || 
+            url.startsWith("tg:") || url.contains("t.me") || url.contains("telegram.me") || 
             url.startsWith("intent://")) {
             
             try {
                 Intent intent;
                 if (url.startsWith("intent://")) {
                     intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                } else if (url.contains("t.me/") || url.contains("telegram.me/")) {
+                    // Force native Telegram launch scheme
+                    String tgUri = url.replace("https://t.me/", "tg://resolve?domain=")
+                                      .replace("http://t.me/", "tg://resolve?domain=")
+                                      .replace("https://telegram.me/", "tg://resolve?domain=");
+                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(tgUri));
                 } else {
-                    intent = Intent.newIntent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 }
 
                 if (intent != null) {
@@ -240,9 +269,16 @@ public class MainActivity extends Activity {
                     return true;
                 }
             } catch (Exception e) {
-                Toast.makeText(this, "App not installed or link cannot be opened", Toast.LENGTH_SHORT).show();
-                return true;
+                try {
+                    Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(fallbackIntent);
+                    return true;
+                } catch (Exception ex) {
+                    Toast.makeText(this, "App not installed", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
             }
+            return true;
         }
         return false;
     }
