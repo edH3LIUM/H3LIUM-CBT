@@ -19,7 +19,6 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.AlphaAnimation;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.JsResult;
@@ -36,7 +35,6 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
     private WebView myWebView;
-    private String currentLoadedUrl = "";
     private static final String CHANNEL_ID = "h3lium_app_notifications";
 
     @Override
@@ -47,6 +45,10 @@ public class MainActivity extends Activity {
         createNotificationChannel();
 
         myWebView = findViewById(R.id.webview);
+        
+        // Blink aur flickering issue ko rokne ke liye Hardware Acceleration optimization
+        myWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
         WebSettings webSettings = myWebView.getSettings();
         
         webSettings.setJavaScriptEnabled(true);
@@ -56,6 +58,10 @@ public class MainActivity extends Activity {
         webSettings.setAllowContentAccess(true);
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setSupportMultipleWindows(true);
+        
+        // Smooth rendering ke liye settings
+        webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
+        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         myWebView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -169,31 +175,13 @@ public class MainActivity extends Activity {
                 super.onPageStarted(view, url, favicon);
                 if (handleExternalLinks(url)) {
                     view.stopLoading();
-                    return;
-                }
-                if (!url.equals(currentLoadedUrl)) {
-                    AlphaAnimation fadeOut = new AlphaAnimation(1.0f, 0.4f);
-                    fadeOut.setDuration(150);
-                    view.startAnimation(fadeOut);
                 }
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                currentLoadedUrl = url;
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
-
-                String slideAnimationCss = 
-                    "var style = document.createElement('style');" +
-                    "style.innerHTML = '@keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } " +
-                    "nav, .drawer, .menu-sidebar, [class*=\"menu\"], [class*=\"drawer\"] { animation: slideInLeft 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important; }';" +
-                    "document.head.appendChild(style);";
-                view.loadUrl("javascript:" + slideAnimationCss);
-
-                AlphaAnimation fadeIn = new AlphaAnimation(0.4f, 1.0f);
-                fadeIn.setDuration(250);
-                view.startAnimation(fadeIn);
             }
         });
 
@@ -241,7 +229,6 @@ public class MainActivity extends Activity {
         myWebView.loadUrl("https://h3lium-cbt.netlify.app/"); 
     }
 
-    // Immediate External Redirect without rendering preview in WebView
     private boolean handleExternalLinks(String url) {
         if (url == null) return false;
 
@@ -255,7 +242,6 @@ public class MainActivity extends Activity {
                 if (url.startsWith("intent://")) {
                     intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
                 } else if (url.contains("t.me/") || url.contains("telegram.me/")) {
-                    // Force native Telegram launch scheme
                     String tgUri = url.replace("https://t.me/", "tg://resolve?domain=")
                                       .replace("http://t.me/", "tg://resolve?domain=")
                                       .replace("https://telegram.me/", "tg://resolve?domain=");
