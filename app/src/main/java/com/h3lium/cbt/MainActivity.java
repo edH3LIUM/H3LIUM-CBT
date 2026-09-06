@@ -188,13 +188,11 @@ public class MainActivity extends Activity {
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
             }
 
-            // Catches errors on legacy Android devices
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 showCustomErrorPage(view, failingUrl);
             }
 
-            // Catches ALL errors for any internal/external frames & main pages
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 String failingUrl = request.getUrl().toString();
@@ -246,33 +244,78 @@ public class MainActivity extends Activity {
         myWebView.loadUrl("https://h3lium-cbt.netlify.app/"); 
     }
 
-    // Modern Branded Custom Offline Error Screen (Completely Hides internal URLs & offers smart retry)
+    // Interactive & Animated Fullscreen Offline Experience
     private void showCustomErrorPage(WebView view, String failedUrl) {
         String retryTarget = (failedUrl != null && !failedUrl.startsWith("data:")) ? failedUrl : "https://h3lium-cbt.netlify.app/";
         
-        String errorHtml = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">" +
+        String errorHtml = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">" +
                 "<style>" +
-                "* { box-sizing: border-box; margin: 0; padding: 0; }" +
-                "body { background: #0b0f19; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 24px; text-align: center; }" +
-                ".card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 36px 24px; max-width: 380px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); }" +
-                ".icon-wrapper { width: 72px; height: 72px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #f87171; font-size: 32px; }" +
-                "h2 { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 8px; tracking: -0.01em; }" +
-                "p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 28px; }" +
-                ".btn-group { display: flex; flex-direction: column; gap: 12px; }" +
-                ".btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; border: none; padding: 14px 20px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }" +
-                ".btn-primary:active { transform: scale(0.97); opacity: 0.9; }" +
-                ".btn-secondary { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 20px; font-size: 14px; font-weight: 500; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }" +
-                ".btn-secondary:active { transform: scale(0.97); background: rgba(255, 255, 255, 0.1); }" +
+                "* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }" +
+                "body { background: #060913; color: #f8fafc; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }" +
+                
+                "/* Animated Ambient Background Blobs */" +
+                ".blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; animation: float 10s infinite alternate ease-in-out; }" +
+                ".blob-1 { width: 350px; height: 350px; background: #3b82f6; top: -10%; left: -10%; }" +
+                ".blob-2 { width: 400px; height: 400px; background: #6366f1; bottom: -15%; right: -10%; animation-delay: -5s; }" +
+                ".blob-3 { width: 250px; height: 250px; background: #ec4899; top: 40%; left: 30%; opacity: 0.15; animation-duration: 8s; }" +
+                "@keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 50px) scale(1.1); } }" +
+
+                "/* Interactive Card Canvas */" +
+                ".container { position: relative; z-index: 10; width: 90%; max-width: 520px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(20px); border-radius: 24px; padding: 36px 28px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; }" +
+
+                "/* Animated Radar / Wifi Pulse Icon */" +
+                ".radar-box { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }" +
+                ".pulse { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: rgba(59, 130, 246, 0.2); animation: pulseWave 2s infinite ease-out; }" +
+                ".pulse:nth-child(2) { animation-delay: 0.6s; }" +
+                ".icon-center { position: relative; z-index: 2; width: 64px; height: 64px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #60a5fa; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }" +
+                "@keyframes pulseWave { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }" +
+
+                "h1 { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 8px; letter-spacing: -0.02em; }" +
+                "p { font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 24px; max-width: 380px; }" +
+
+                "/* Interactive Pulse Tag */" +
+                ".status-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 24px; }" +
+                ".status-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: blink 1.2s infinite ease-in-out; }" +
+                "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }" +
+
+                "/* Buttons */" +
+                ".btn-group { width: 100%; display: flex; flex-direction: column; gap: 12px; }" +
+                ".btn { width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; outline: none; }" +
+                ".btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35); position: relative; overflow: hidden; }" +
+                ".btn-primary:active { transform: scale(0.98); opacity: 0.9; }" +
+                ".btn-secondary { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); }" +
+                ".btn-secondary:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.1); }" +
                 "</style></head><body>" +
-                "<div class=\"card\">" +
-                "<div class=\"icon-wrapper\">⚡</div>" +
-                "<h2>Connection Lost</h2>" +
-                "<p>Unable to load test content. Please check your internet connection and try reloading.</p>" +
+
+                "<div class=\"blob blob-1\"></div>" +
+                "<div class=\"blob blob-2\"></div>" +
+                "<div class=\"blob blob-3\"></div>" +
+
+                "<div class=\"container\">" +
+                "<div class=\"radar-box\">" +
+                "<div class=\"pulse\"></div>" +
+                "<div class=\"pulse\"></div>" +
+                "<div class=\"icon-center\">" +
+                "<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M16.72 11.06A10.94 10.94 0 0 1 19 12.55\"></path><path d=\"M5 12.55a10.94 10.94 0 0 1 5.17-2.39\"></path><path d=\"M10.71 5.05A16 16 0 0 1 22.58 9\"></path><path d=\"M1.42 9a15.91 15.91 0 0 1 4.7-2.88\"></path><path d=\"M8.53 16.11a6 6 0 0 1 6.95 0\"></path><line x1=\"12\" y1=\"20\" x2=\"12.01\" y2=\"20\"></line></svg>" +
+                "</div>" +
+                "</div>" +
+
+                "<div class=\"status-pill\"><div class=\"status-dot\"></div> You're Offline</div>" +
+                "<h1>Connection Interrupted</h1>" +
+                "<p>H3LIUM CBT requires an active internet connection to load test questions and sync your responses.</p>" +
+
                 "<div class=\"btn-group\">" +
-                "<button class=\"btn-primary\" onclick=\"location.href='" + retryTarget + "'\">Retry Loading</button>" +
-                "<button class=\"btn-secondary\" onclick=\"location.href='https://h3lium-cbt.netlify.app/'\">Go to Dashboard</button>" +
+                "<button class=\"btn btn-primary\" onclick=\"reloadPage()\">⚡ Reconnect Now</button>" +
+                "<button class=\"btn btn-secondary\" onclick=\"location.href='https://h3lium-cbt.netlify.app/'\">Return to Home</button>" +
                 "</div>" +
                 "</div>" +
+
+                "<script>" +
+                "function reloadPage() {" +
+                "  document.querySelector('.btn-primary').innerHTML = 'Connecting...';" +
+                "  setTimeout(() => { location.href = '" + retryTarget + "'; }, 300);" +
+                "}" +
+                "</script>" +
                 "</body></html>";
 
         view.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", null);
