@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private void createWebPrintJob(WebView webView) {
         PrintManager printManager = (PrintManager) this.getSystemService(Context.PRINT_SERVICE);
         PrintDocumentAdapter printAdapter = webView.createPrintDocumentAdapter("H3LIUM_Document");
-        String jobName = getString(R.string.app_name) + " Document";
+        String jobName = "H3LIUM CBT Document";
         if (printManager != null) {
             printManager.print(jobName, printAdapter, new PrintAttributes.Builder().build());
         }
