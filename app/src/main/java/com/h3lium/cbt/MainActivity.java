@@ -246,8 +246,8 @@ public class MainActivity extends Activity {
 
     // Interactive & Animated Fullscreen Offline Experience
     private void showCustomErrorPage(WebView view, String failedUrl) {
-        String retryTarget = (failedUrl != null && !failedUrl.startsWith("data:")) ? failedUrl : "https://h3lium-cbt.netlify.app/";
-        
+        String retryTarget = (failedUrl != null && !failedUrl.startsWith("data:") && !failedUrl.contains("firebaseio.com") && !failedUrl.endsWith(".js")) 
+        ? failedUrl : "https://h3lium-cbt.netlify.app/";
         String errorHtml = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">" +
                 "<style>" +
                 "* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }" +
