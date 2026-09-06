@@ -194,10 +194,15 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                String failingUrl = request.getUrl().toString();
-                showCustomErrorPage(view, failingUrl);
-            }
+public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+    if (request.isForMainFrame()) {
+        String failingUrl = request.getUrl().toString();
+        if (!failingUrl.contains("firebaseio.com") && !failingUrl.contains(".js")) {
+            showCustomErrorPage(view, failingUrl);
+        }
+    }
+}
+
         });
 
         // Native Print / PDF bridge
@@ -246,81 +251,47 @@ public class MainActivity extends Activity {
 
     // Interactive & Animated Fullscreen Offline Experience
     private void showCustomErrorPage(WebView view, String failedUrl) {
-        String retryTarget = (failedUrl != null && !failedUrl.startsWith("data:")) ? failedUrl : "https://h3lium-cbt.netlify.app/";
-        
-        String errorHtml = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">" +
-                "<style>" +
-                "* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }" +
-                "body { background: #060913; color: #f8fafc; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }" +
-                
-                "/* Animated Ambient Background Blobs */" +
-                ".blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; animation: float 10s infinite alternate ease-in-out; }" +
-                ".blob-1 { width: 350px; height: 350px; background: #3b82f6; top: -10%; left: -10%; }" +
-                ".blob-2 { width: 400px; height: 400px; background: #6366f1; bottom: -15%; right: -10%; animation-delay: -5s; }" +
-                ".blob-3 { width: 250px; height: 250px; background: #ec4899; top: 40%; left: 30%; opacity: 0.15; animation-duration: 8s; }" +
-                "@keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 50px) scale(1.1); } }" +
+    String retryTarget = (failedUrl != null && !failedUrl.contains("firebaseio.com") && !failedUrl.endsWith(".js")) 
+            ? failedUrl : "https://h3lium-cbt.netlify.app/";
 
-                "/* Interactive Card Canvas */" +
-                ".container { position: relative; z-index: 10; width: 90%; max-width: 520px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(20px); border-radius: 24px; padding: 36px 28px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; }" +
+    String errorHtml = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">" +
+            "<style>" +
+            ":root { --bg: #0b0f19; --card: rgba(15,23,42,0.85); --text: #f8fafc; --sub: #94a3b8; --accent: #3b82f6; --border: rgba(255,255,255,0.12); }" +
+            "body.theme-light { --bg: #f1f5f9; --card: rgba(255,255,255,0.9); --text: #0f172a; --sub: #475569; --accent: #2563eb; --border: rgba(0,0,0,0.12); }" +
+            "body.theme-vintage { --bg: #f4ebd0; --card: rgba(230,219,192,0.9); --text: #362f2d; --sub: #6b5e59; --accent: #b85b32; --border: rgba(54,47,45,0.15); }" +
+            "* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }" +
+            "body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; transition: all 0.3s ease; }" +
+            ".card { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }" +
+            ".theme-bar { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }" +
+            ".theme-btn { padding: 6px 14px; font-size: 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; }" +
+            "h1 { font-size: 20px; margin-bottom: 8px; }" +
+            "p { font-size: 14px; color: var(--sub); margin-bottom: 20px; }" +
+            ".game-box { background: rgba(0,0,0,0.1); border: 1px solid var(--border); border-radius: 12px; height: 140px; margin-bottom: 20px; position: relative; overflow: hidden; }" +
+            "#target { width: 36px; height: 36px; background: var(--accent); border-radius: 50%; position: absolute; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #fff; }" +
+            ".btn-refresh { width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; background: var(--accent); color: #fff; border: none; cursor: pointer; }" +
+            "</style></head><body>" +
+            "<div class=\"card\">" +
+            "<div class=\"theme-bar\">" +
+            "<button class=\"theme-btn\" onclick=\"setTheme('dark')\">Dark</button>" +
+            "<button class=\"theme-btn\" onclick=\"setTheme('light')\">Light</button>" +
+            "<button class=\"theme-btn\" onclick=\"setTheme('vintage')\">Vintage</button>" +
+            "</div>" +
+            "<h1>Connection Interrupted</h1>" +
+            "<p>Tap the moving circle to play while reconnecting!</p>" +
+            "<div class=\"game-box\" id=\"box\"><div id=\"target\" onclick=\"hit()\">0</div></div>" +
+            "<button class=\"btn-refresh\" onclick=\"location.href='" + retryTarget + "'\">⚡ Refresh Page</button>" +
+            "</div>" +
+            "<script>" +
+            "let score = 0;" +
+            "function setTheme(t) { document.body.className = 'theme-' + t; localStorage.setItem('h3_theme', t); }" +
+            "const st = localStorage.getItem('h3_theme'); if(st) setTheme(st);" +
+            "function hit() { score++; const t = document.getElementById('target'), b = document.getElementById('box'); t.innerText = score; t.style.left = Math.floor(Math.random()*(b.clientWidth-40))+'px'; t.style.top = Math.floor(Math.random()*(b.clientHeight-40))+'px'; }" +
+            "hit();" +
+            "</script></body></html>";
 
-                "/* Animated Radar / Wifi Pulse Icon */" +
-                ".radar-box { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }" +
-                ".pulse { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: rgba(59, 130, 246, 0.2); animation: pulseWave 2s infinite ease-out; }" +
-                ".pulse:nth-child(2) { animation-delay: 0.6s; }" +
-                ".icon-center { position: relative; z-index: 2; width: 64px; height: 64px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #60a5fa; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }" +
-                "@keyframes pulseWave { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }" +
-
-                "h1 { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 8px; letter-spacing: -0.02em; }" +
-                "p { font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 24px; max-width: 380px; }" +
-
-                "/* Interactive Pulse Tag */" +
-                ".status-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 24px; }" +
-                ".status-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: blink 1.2s infinite ease-in-out; }" +
-                "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }" +
-
-                "/* Buttons */" +
-                ".btn-group { width: 100%; display: flex; flex-direction: column; gap: 12px; }" +
-                ".btn { width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; outline: none; }" +
-                ".btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35); position: relative; overflow: hidden; }" +
-                ".btn-primary:active { transform: scale(0.98); opacity: 0.9; }" +
-                ".btn-secondary { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); }" +
-                ".btn-secondary:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.1); }" +
-                "</style></head><body>" +
-
-                "<div class=\"blob blob-1\"></div>" +
-                "<div class=\"blob blob-2\"></div>" +
-                "<div class=\"blob blob-3\"></div>" +
-
-                "<div class=\"container\">" +
-                "<div class=\"radar-box\">" +
-                "<div class=\"pulse\"></div>" +
-                "<div class=\"pulse\"></div>" +
-                "<div class=\"icon-center\">" +
-                "<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M16.72 11.06A10.94 10.94 0 0 1 19 12.55\"></path><path d=\"M5 12.55a10.94 10.94 0 0 1 5.17-2.39\"></path><path d=\"M10.71 5.05A16 16 0 0 1 22.58 9\"></path><path d=\"M1.42 9a15.91 15.91 0 0 1 4.7-2.88\"></path><path d=\"M8.53 16.11a6 6 0 0 1 6.95 0\"></path><line x1=\"12\" y1=\"20\" x2=\"12.01\" y2=\"20\"></line></svg>" +
-                "</div>" +
-                "</div>" +
-
-                "<div class=\"status-pill\"><div class=\"status-dot\"></div> You're Offline</div>" +
-                "<h1>Connection Interrupted</h1>" +
-                "<p>H3LIUM CBT requires an active internet connection to load test questions and sync your responses.</p>" +
-
-                "<div class=\"btn-group\">" +
-                "<button class=\"btn btn-primary\" onclick=\"reloadPage()\">⚡ Reconnect Now</button>" +
-                "<button class=\"btn btn-secondary\" onclick=\"location.href='https://h3lium-cbt.netlify.app/'\">Return to Home</button>" +
-                "</div>" +
-                "</div>" +
-
-                "<script>" +
-                "function reloadPage() {" +
-                "  document.querySelector('.btn-primary').innerHTML = 'Connecting...';" +
-                "  setTimeout(() => { location.href = '" + retryTarget + "'; }, 300);" +
-                "}" +
-                "</script>" +
-                "</body></html>";
-
-        view.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", null);
-    }
-
+    view.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", null);
+}
+    
     private boolean handleExternalLinks(String url) {
         if (url == null) return false;
 
