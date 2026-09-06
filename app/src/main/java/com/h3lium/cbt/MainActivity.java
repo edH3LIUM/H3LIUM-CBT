@@ -24,6 +24,7 @@ import android.webkit.DownloadListener;
 import android.webkit.JsResult;
 import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -181,6 +182,20 @@ public class MainActivity extends Activity {
                 super.onPageFinished(view, url);
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
             }
+
+            // Custom Error Screen for Older Android Versions
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                showCustomErrorPage(view);
+            }
+
+            // Custom Error Screen for Modern Android Versions
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame()) {
+                    showCustomErrorPage(view);
+                }
+            }
         });
 
         // Native Print / PDF bridge
@@ -227,6 +242,26 @@ public class MainActivity extends Activity {
         myWebView.loadUrl("https://h3lium-cbt.netlify.app/"); 
     }
 
+    // Modern Branded Custom Offline Error Screen (Hides Netlify URL)
+    private void showCustomErrorPage(WebView view) {
+        String errorHtml = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "<style>" +
+                "body { background-color: #0f172a; color: #ffffff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }" +
+                ".icon { font-size: 60px; margin-bottom: 20px; }" +
+                "h2 { font-size: 24px; margin-bottom: 10px; color: #f8fafc; }" +
+                "p { font-size: 15px; color: #94a3b8; margin-bottom: 30px; line-height: 1.5; max-width: 300px; }" +
+                ".btn { background: #3b82f6; color: #ffffff; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.2s ease; }" +
+                ".btn:active { transform: scale(0.95); opacity: 0.9; }" +
+                "</style></head><body>" +
+                "<div class=\"icon\">📶</div>" +
+                "<h2>Connection Error</h2>" +
+                "<p>Unable to connect to H3LIUM server. Please check your internet connection and try again.</p>" +
+                "<button class=\"btn\" onclick=\"location.href='https://h3lium-cbt.netlify.app/'\">Try Again</button>" +
+                "</body></html>";
+
+        view.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", null);
+    }
+
     private boolean handleExternalLinks(String url) {
         if (url == null) return false;
 
@@ -249,22 +284,18 @@ public class MainActivity extends Activity {
 
                     if (path != null && !path.isEmpty()) {
                         if (path.startsWith("+")) {
-                            // Private Invite Link (e.g. t.me/+4uGIcn_EFwAyMTZl -> tg://join?invite=4uGIcn_EFwAyMTZl)
                             String inviteCode = path.substring(1);
                             intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://join?invite=" + inviteCode));
                         } else if (path.startsWith("joinchat/")) {
-                            // Legacy Private Invite Link
                             String inviteCode = path.replace("joinchat/", "");
                             intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://join?invite=" + inviteCode));
                         } else {
                             String[] parts = path.split("/");
                             if (parts.length >= 2) {
-                                // Channel Post link e.g. PREMIUM_H3/3 -> tg://resolve?domain=PREMIUM_H3&post=3
                                 String domain = parts[0];
                                 String postId = parts[1];
                                 intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=" + domain + "&post=" + postId));
                             } else {
-                                // Public Channel Link e.g. PREMIUM_H3 -> tg://resolve?domain=PREMIUM_H3
                                 intent = new Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=" + parts[0]));
                             }
                         }
