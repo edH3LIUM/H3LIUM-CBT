@@ -146,6 +146,11 @@ public class MainActivity extends Activity {
                         myWebView.loadUrl(url);
                         return true;
                     }
+
+                    @Override
+                    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                        showCustomErrorPage(view, request.getUrl().toString());
+                    }
                 });
                 return true;
             }
@@ -183,18 +188,17 @@ public class MainActivity extends Activity {
                 view.loadUrl("javascript:window.print = function() { window.AndroidPrint.print(); };");
             }
 
-            // Custom Error Screen for Older Android Versions
+            // Catches errors on legacy Android devices
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                showCustomErrorPage(view);
+                showCustomErrorPage(view, failingUrl);
             }
 
-            // Custom Error Screen for Modern Android Versions
+            // Catches ALL errors for any internal/external frames & main pages
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                if (request.isForMainFrame()) {
-                    showCustomErrorPage(view);
-                }
+                String failingUrl = request.getUrl().toString();
+                showCustomErrorPage(view, failingUrl);
             }
         });
 
@@ -242,21 +246,33 @@ public class MainActivity extends Activity {
         myWebView.loadUrl("https://h3lium-cbt.netlify.app/"); 
     }
 
-    // Modern Branded Custom Offline Error Screen (Hides Netlify URL)
-    private void showCustomErrorPage(WebView view) {
-        String errorHtml = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+    // Modern Branded Custom Offline Error Screen (Completely Hides internal URLs & offers smart retry)
+    private void showCustomErrorPage(WebView view, String failedUrl) {
+        String retryTarget = (failedUrl != null && !failedUrl.startsWith("data:")) ? failedUrl : "https://h3lium-cbt.netlify.app/";
+        
+        String errorHtml = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">" +
                 "<style>" +
-                "body { background-color: #0f172a; color: #ffffff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }" +
-                ".icon { font-size: 60px; margin-bottom: 20px; }" +
-                "h2 { font-size: 24px; margin-bottom: 10px; color: #f8fafc; }" +
-                "p { font-size: 15px; color: #94a3b8; margin-bottom: 30px; line-height: 1.5; max-width: 300px; }" +
-                ".btn { background: #3b82f6; color: #ffffff; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.2s ease; }" +
-                ".btn:active { transform: scale(0.95); opacity: 0.9; }" +
+                "* { box-sizing: border-box; margin: 0; padding: 0; }" +
+                "body { background: #0b0f19; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 24px; text-align: center; }" +
+                ".card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 36px 24px; max-width: 380px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); }" +
+                ".icon-wrapper { width: 72px; height: 72px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #f87171; font-size: 32px; }" +
+                "h2 { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 8px; tracking: -0.01em; }" +
+                "p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 28px; }" +
+                ".btn-group { display: flex; flex-direction: column; gap: 12px; }" +
+                ".btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; border: none; padding: 14px 20px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }" +
+                ".btn-primary:active { transform: scale(0.97); opacity: 0.9; }" +
+                ".btn-secondary { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 20px; font-size: 14px; font-weight: 500; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }" +
+                ".btn-secondary:active { transform: scale(0.97); background: rgba(255, 255, 255, 0.1); }" +
                 "</style></head><body>" +
-                "<div class=\"icon\">📶</div>" +
-                "<h2>Connection Error</h2>" +
-                "<p>Unable to connect to H3LIUM server. Please check your internet connection and try again.</p>" +
-                "<button class=\"btn\" onclick=\"location.href='https://h3lium-cbt.netlify.app/'\">Try Again</button>" +
+                "<div class=\"card\">" +
+                "<div class=\"icon-wrapper\">⚡</div>" +
+                "<h2>Connection Lost</h2>" +
+                "<p>Unable to load test content. Please check your internet connection and try reloading.</p>" +
+                "<div class=\"btn-group\">" +
+                "<button class=\"btn-primary\" onclick=\"location.href='" + retryTarget + "'\">Retry Loading</button>" +
+                "<button class=\"btn-secondary\" onclick=\"location.href='https://h3lium-cbt.netlify.app/'\">Go to Dashboard</button>" +
+                "</div>" +
+                "</div>" +
                 "</body></html>";
 
         view.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", null);
